@@ -2,12 +2,12 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { config } from "./config";
+import { tradesRouter } from "./routes/trades";
+import { adminRouter } from "./routes/admin";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(helmet());
 app.use(cors());
@@ -19,13 +19,20 @@ app.get("/health", (_req, res) => {
     status: "ok",
     service: "SafeTrade API",
     version: "0.1.0",
-    network: process.env.STELLAR_NETWORK || "testnet",
+    network: config.stellarNetwork,
+    contractId: config.contractId || null,
     timestamp: new Date().toISOString(),
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 SafeTrade API running on http://localhost:${PORT}`);
+app.use("/api/trades", tradesRouter);
+app.use("/api/admin", adminRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+app.listen(config.port, () => {
+  console.log(`🚀 SafeTrade API running on http://localhost:${config.port}`);
 });
 
 export default app;
